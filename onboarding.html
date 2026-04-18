@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lunnar | Onboarding</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            canvas: '#FDFDF5',
+                            dark: '#121212',
+                            darkSurface: '#1E1E1E',
+                            navy: '#102C57',
+                            slate: '#1A1A1A'
+                        }
+                    },
+                    fontFamily: {
+                        heading: ['"Instrument Sans"', 'sans-serif'],
+                        body: ['"Inter"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
+                        'dark-soft': '0 10px 40px -10px rgba(0,0,0,0.5)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Instrument Sans', sans-serif;
+        }
+        .btn-hover-effect {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-hover-effect:active {
+            transform: translateY(0);
+        }
+        .btn-hover-effect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(16, 44, 87, 0.3);
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 0.875rem 1.25rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            background-color: white;
+            transition: all 0.2s ease;
+            outline: none;
+            color: #1A1A1A;
+            font-size: 0.95rem;
+        }
+        .input-field:focus {
+            border-color: #102C57;
+            box-shadow: 0 0 0 3px rgba(16, 44, 87, 0.1);
+        }
+        
+        .dark .input-field {
+            background-color: #1A1A1A;
+            border-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .dark .input-field:focus {
+            border-color: #102C57;
+            box-shadow: 0 0 0 3px rgba(16, 44, 87, 0.3);
+        }
+        
+        /* Progress Bar Transition */
+        .progress-transition {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Animation */
+        @keyframes fadeInSlideUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeInSlideUp 0.5s ease-out forwards;
+        }
+    </style>
+
+    <!-- React and ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-brand-canvas text-brand-slate dark:bg-brand-dark dark:text-gray-100 min-h-screen flex flex-col">
+    <div id="root" class="flex-grow flex flex-col"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const supabaseUrl = 'https://tslvpvamvwexzyiyoobx.supabase.co';
+        const supabaseKey = 'sb_publishable_NoErqD-ZmgszMs1HmZPYqA_ucJ-H78l';
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        const Icon = ({ name, className }) => {
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        const formatCNPJ = (value) => {
+            const numbers = value.replace(/\D/g, '');
+            return numbers.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, '$1.$2.$3/$4-$5');
+        };
+        
+        const formatPhone = (value) => {
+            const numbers = value.replace(/\D/g, '');
+            if (numbers.length <= 10) {
+                return numbers.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+            }
+            return numbers.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, '($1) $2-$3');
+        };
+
+        const App = () => {
+            const [theme, setTheme] = useState('light');
+            const [step, setStep] = useState(1);
+            
+            const [formData, setFormData] = useState({
+                companyName: '',
+                cnpj: '',
+                phone: '',
+                address: '',
+                employees: '',
+                leads: '',
+                description: ''
+            });
+
+            const [userId, setUserId] = useState(null);
+            const [submitting, setSubmitting] = useState(false);
+
+            useEffect(() => {
+                const getSession = async () => {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (!session) {
+                        window.location.href = 'Lunnar.html';
+                        return;
+                    }
+                    setUserId(session.user.id);
+                };
+                getSession();
+
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    setTheme('dark');
+                    document.documentElement.classList.add('dark');
+                }
+                lucide.createIcons();
+            }, []);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [step, theme]);
+
+            const handleChange = (e) => {
+                const { name, value } = e.target;
+                
+                let formattedValue = value;
+                // Aplica máscaras apenas se houver valor
+                if (name === 'cnpj' && value) formattedValue = formatCNPJ(value);
+                if (name === 'phone' && value) formattedValue = formatPhone(value);
+                
+                // Trata deleção (backspace) removendo máscaras indesejadas
+                if (!value) formattedValue = '';
+                
+                setFormData(prev => ({
+                    ...prev,
+                    [name]: formattedValue
+                }));
+            };
+
+            const nextStep = () => setStep(s => Math.min(s + 1, 4));
+            const prevStep = () => setStep(s => Math.max(s - 1, 1));
+            const submit = async () => {
+                setSubmitting(true);
+                const { error } = await supabaseClient.from('companies').insert([{
+                    user_id: userId,
+                    company_name: formData.companyName,
+                    cnpj: formData.cnpj,
+                    phone: formData.phone,
+                    address: formData.address,
+                    employees: formData.employees,
+                    leads: formData.leads,
+                    description: formData.description
+                }]);
+                
+                if (error) {
+                    console.error('Erro ao salvar:', error);
+                    alert('Ocorreu um erro ao salvar os dados. Tente novamente.');
+                    setSubmitting(false);
+                    return;
+                }
+
+                // Redirect to dashboard explicitly 
+                window.location.href = 'dashboard.html';
+            };
+
+            const toggleTheme = () => {
+                const newTheme = theme === 'light' ? 'dark' : 'light';
+                setTheme(newTheme);
+                if (newTheme === 'dark') document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            };
+
+            const progress = (step / 4) * 100;
+
+            return (
+                <div className="flex-grow flex flex-col relative transition-colors duration-300">
+                    {/* Theme Toggle */}
+                    <button 
+                        onClick={toggleTheme} 
+                        className="absolute top-6 right-6 p-3 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition-colors z-50 cursor-pointer"
+                        title="Alternar Tema"
+                    >
+                        <span key={theme} className="flex"><Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5 text-brand-slate dark:text-white" /></span>
+                    </button>
+
+                    {/* Progress Bar */}
+                    <div className="w-full h-1.5 bg-black/5 dark:bg-white/5 fixed top-0 left-0 z-50">
+                        <div 
+                            className="h-full bg-brand-navy dark:bg-blue-500 progress-transition" 
+                            style={{ width: `${progress}%` }}
+                        ></div>
+                    </div>
+
+                    <div className="flex-grow flex items-center justify-center p-6 mt-8">
+                        <div className="w-full max-w-lg bg-white dark:bg-brand-darkSurface p-8 sm:p-10 rounded-[2rem] shadow-soft dark:shadow-dark-soft border border-black/5 dark:border-white/5 animate-fade-in" key={step}>
+                            
+                            {/* Header */}
+                            <div className="mb-8">
+                                <p className="text-brand-navy dark:text-blue-400 font-semibold text-sm mb-2 flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-full bg-brand-navy/10 dark:bg-blue-500/20 flex items-center justify-center tracking-tighter text-xs">
+                                        {step}
+                                    </span>
+                                    Passo {step} de 4
+                                </p>
+                                <h1 className="font-heading font-bold text-3xl text-brand-slate dark:text-white">
+                                    {step === 1 && "Dados da Empresa"}
+                                    {step === 2 && "Métricas"}
+                                    {step === 3 && "Área de Atuação"}
+                                    {step === 4 && "Revisão"}
+                                </h1>
+                            </div>
+
+                            {/* Form Steps */}
+                            <div className="space-y-5">
+                                {step === 1 && (
+                                    <>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1.5 text-brand-slate/80 dark:text-gray-300">Nome da Empresa</label>
+                                            <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="input-field" placeholder="Ex: Lunnar Technologies" required />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1.5 text-brand-slate/80 dark:text-gray-300">CNPJ</label>
+                                            <input type="text" name="cnpj" value={formData.cnpj} onChange={handleChange} maxLength="18" className="input-field" placeholder="00.000.000/0000-00" required />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1.5 text-brand-slate/80 dark:text-gray-300">Telefone Comercial</label>
+                                            <input type="text" name="phone" value={formData.phone} onChange={handleChange} maxLength="15" className="input-field" placeholder="(00) 0000-0000" required />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1.5 text-brand-slate/80 dark:text-gray-300">Endereço Completo</label>
+                                            <input type="text" name="address" value={formData.address} onChange={handleChange} className="input-field" placeholder="Rua, Número, Bairro, Cidade - UF" required />
+                                        </div>
+                                    </>
+                                )}
+
+                                {step === 2 && (
+                                    <>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1.5 text-brand-slate/80 dark:text-gray-300">Número de Funcionários</label>
+                                            <select name="employees" value={formData.employees} onChange={handleChange} className="input-field appearance-none cursor-pointer">
+                                                <option value="" disabled>Selecione uma faixa</option>
+                                                <option value="1-10">1 a 10 funcionários</option>
+                                                <option value="11-50">11 a 50 funcionários</option>
+                                                <option value="51-200">51 a 200 funcionários</option>
+                                                <option value="201+">Mais de 200 funcionários</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1.5 text-brand-slate/80 dark:text-gray-300">Número de Leads por Mês (Estimativa)</label>
+                                            <input type="number" name="leads" value={formData.leads} onChange={handleChange} className="input-field" placeholder="Ex: 500" min="0" />
+                                        </div>
+                                    </>
+                                )}
+
+                                {step === 3 && (
+                                    <>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1.5 text-brand-slate/80 dark:text-gray-300">O que a empresa faz?</label>
+                                            <p className="text-xs text-brand-slate/60 dark:text-gray-400 mb-3">Descreva brevemente seu produto ou serviço e qual problema ele resolve.</p>
+                                            <textarea 
+                                                name="description" 
+                                                value={formData.description} 
+                                                onChange={handleChange} 
+                                                className="input-field resize-none h-40" 
+                                                placeholder="Nossa empresa ajuda clientes a..."
+                                            ></textarea>
+                                        </div>
+                                    </>
+                                )}
+
+                                {step === 4 && (
+                                    <div className="space-y-4 bg-black/5 dark:bg-white/5 p-6 rounded-2xl">
+                                        <div>
+                                            <p className="text-xs font-semibold text-brand-slate/50 dark:text-gray-500 uppercase tracking-wider mb-1">Empresa</p>
+                                            <p className="font-medium text-brand-slate dark:text-white">{formData.companyName || '—'}</p>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p className="text-xs font-semibold text-brand-slate/50 dark:text-gray-500 uppercase tracking-wider mb-1">CNPJ</p>
+                                                <p className="font-medium text-brand-slate dark:text-white">{formData.cnpj || '—'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-semibold text-brand-slate/50 dark:text-gray-500 uppercase tracking-wider mb-1">Telefone</p>
+                                                <p className="font-medium text-brand-slate dark:text-white">{formData.phone || '—'}</p>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-semibold text-brand-slate/50 dark:text-gray-500 uppercase tracking-wider mb-1">Tamanho da Equipe</p>
+                                            <p className="font-medium text-brand-slate dark:text-white">{formData.employees || '—'} / {formData.leads ? `${formData.leads} leads/mês` : '—'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-semibold text-brand-slate/50 dark:text-gray-500 uppercase tracking-wider mb-1">O que faz</p>
+                                            <p className="font-medium text-brand-slate dark:text-white text-sm leading-relaxed">{formData.description || '—'}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer Actions */}
+                            <div className="mt-10 flex gap-4">
+                                {step > 1 && (
+                                    <button 
+                                        onClick={prevStep}
+                                        className="px-6 py-3.5 rounded-xl border border-black/10 dark:border-white/10 font-semibold text-brand-slate dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                                    >
+                                        Voltar
+                                    </button>
+                                )}
+                                <button 
+                                    onClick={step === 4 ? submit : nextStep}
+                                    disabled={step === 4 && submitting}
+                                    className="flex-1 py-3.5 rounded-xl bg-brand-navy text-[#FDFDF5] font-semibold text-lg btn-hover-effect flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                >
+                                    {step === 4 ? (submitting ? 'Salvando...' : 'Confirmar e Acessar') : 'Continuar'}
+                                    {step < 4 && <Icon name="arrow-right" className="w-5 h-5" />}
+                                    {step === 4 && !submitting && <Icon name="check" className="w-5 h-5" />}
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

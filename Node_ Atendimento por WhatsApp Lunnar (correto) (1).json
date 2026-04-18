@@ -1,0 +1,2084 @@
+{
+  "name": "Node: Atendimento por WhatsApp Lunnar (correto)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Node: atendimento por whatsapp  ",
+        "height": 768,
+        "width": 5456,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5424,
+        1888
+      ],
+      "id": "026fa3a1-02b1-490e-8cd8-2f32e6481ca0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tslvpvamvwexzyiyoobx.supabase.co/functions/v1/save-whatsapp-message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-n8n-key",
+              "value": "keyn8n2026"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ phone: $json.user_id, message: $json.final_message, direction: 'incoming', sender_name: $('Puxa os dados do contato - Audio e Mensagem').item.json.senderName }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        8272,
+        2256
+      ],
+      "id": "419f1ffe-ff6e-44cd-902b-5f57b015825b",
+      "name": "Edge function - salvar a mensagem",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "description": "\"Utilize esta ferramenta obrigatoriamente sempre que identificar uma mudança clara na intenção de compra ou no nível de engajamento do cliente durante a conversa. Você deve classificar o lead como 'hot' (pronto para fechar/urgente), 'warm' (interessado mas com dúvidas técnicas) ou 'cold' (desinteressado/parou de responder). Forneça o 'lead_id' e um 'diagnóstico' rico em detalhes sobre o que foi conversado (que será salvo em 'notas') para guiar a abordagem da equipe humana.\"",
+        "workflowId": {
+          "__rl": true,
+          "value": "bbie1MIywlxHNnFh",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/bbie1MIywlxHNnFh",
+          "cachedResultName": "Node: atualizar_status_lead Lunnar"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "diagnostico",
+              "displayName": "diagnostico",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        9440,
+        2464
+      ],
+      "id": "5e82c63f-dd2e-47cb-b0dd-191046a62c95",
+      "name": "Node: atualizar_status_lead"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.message.messageType }}",
+                    "rightValue": "AudioMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "59908eb8-8f2b-4e24-afdc-a3db09ffc14c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5b895da8-d115-40a7-8e09-23ec24ce990b",
+                    "leftValue": "={{ $json.body.message.messageType }}",
+                    "rightValue": "Conversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        5680,
+        2336
+      ],
+      "id": "232fd16d-8fb3-4477-a94c-3148363262f4",
+      "name": "Filtra o tipo da mensagem"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://planoagro.uazapi.com/message/download",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "49529562-893f-4ac7-8ee6-85f7d0251e4d"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $('Filtra o tipo da mensagem').first().json.body.message.messageid }}"
+            },
+            {
+              "name": "generate_mp3",
+              "value": "true"
+            },
+            {
+              "name": "transcribe",
+              "value": "true"
+            },
+            {
+              "name": "openai_apikey",
+              "value": "YOUR_OPENAI_API_KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5888,
+        2208
+      ],
+      "id": "a671f0e0-9f8c-4b3f-ac68-ba384bf5bdd1",
+      "name": "uazapi - transcrição de audio"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5b1ef0d0-f34a-4709-bc71-ae4d7828b797",
+              "name": "sender",
+              "value": "={{ $('Webhook').first().json.body.message.sender }}",
+              "type": "string"
+            },
+            {
+              "id": "5565b887-ade2-45da-94f5-6a7ff2c3fbc2",
+              "name": "senderPhone",
+              "value": "={{ $('Webhook').first().json.body.chat.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "f2f37623-93a5-430f-9086-9f2eec9be6c7",
+              "name": "fromMe",
+              "value": "={{ $('Webhook').first().json.body.message.fromMe }}",
+              "type": "boolean"
+            },
+            {
+              "id": "145020b1-994a-4ee3-8a5c-904fb540c285",
+              "name": "Timestamp",
+              "value": "={{ $('Webhook').first().json.body.message.messageTimestamp.toDateTime('ms') }}",
+              "type": "string"
+            },
+            {
+              "id": "1a919ee4-c603-4490-b5c2-be6a676ff1f1",
+              "name": "senderName",
+              "value": "={{ $('Webhook').first().json.body.message.senderName }}",
+              "type": "string"
+            },
+            {
+              "id": "ee36bf11-1755-4760-ad8b-5d70f619e5d1",
+              "name": "messageType",
+              "value": "={{ $('Webhook').first().json.body.message.messageType }}",
+              "type": "string"
+            },
+            {
+              "id": "a291091a-1c53-44bd-b415-08c4ecc680ec",
+              "name": "text",
+              "value": "={{\n  ({\n    sender: $('Webhook').first().json.body?.message?.sender ?? null,\n    messageTimestamp: $('Webhook').first().json.body?.message?.messageTimestamp ?? null,\n    text:\n      ( $('Webhook').first().json.body?.message?.text ?? '' ).toString().trim()\n      || ( $('uazapi - transcrição de audio').first()?.json?.transcription || '' ).toString().trim(),\n    messageid:\n      $('Webhook').first().json.body?.message?.messageid\n      ?? $('Webhook').first().json.body?.message?.messageId\n      ?? null\n  })\n}}",
+              "type": "string"
+            },
+            {
+              "id": "55df34b0-78cb-43b4-94da-fdcab764464e",
+              "name": "mediaType",
+              "value": "={{ $('Webhook').first().json.body.message.mediaType }}",
+              "type": "string"
+            },
+            {
+              "id": "b1920a90-0909-4428-945d-c7136af0ffe0",
+              "name": "mimetype",
+              "value": "={{ $('Webhook').first().json.body?.message?.content?.mimetype ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "69a6dcb0-735c-4da0-833c-0a1b32bd4074",
+              "name": "message_full",
+              "value": "={{\n  ({\n    sender: $('Webhook').first().json.body?.message?.sender ?? null,\n    messageTimestamp: $('Webhook').first().json.body?.message?.messageTimestamp ?? null,\n    text:\n      ( $('Webhook').first().json.body?.message?.text ?? '' ).toString().trim()\n      || ( $('uazapi - transcrição de audio').first()?.json?.transcription ?? '' ).toString().trim(),\n    messageid:\n      $('Webhook').first().json.body?.message?.messageid\n      ?? $('Webhook').first().json.body?.message?.messageId\n      ?? null\n  })\n}}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6096,
+        2352
+      ],
+      "id": "307e568e-7033-4094-9682-d786e5077394",
+      "name": "Puxa os dados do contato - Audio e Mensagem"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "=list2_{{ $('Puxa os dados do contato - Audio e Mensagem').first().json.sender }}",
+        "messageData": "={{ JSON.stringify($('Puxa os dados do contato - Audio e Mensagem').first().json.message_full) }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        6768,
+        2352
+      ],
+      "id": "36aa7990-7d26-449e-a374-b334d3d06cb3",
+      "name": "Adiciona mensagem ao redis",
+      "credentials": {
+        "redis": {
+          "id": "sUeAsEPkI93F5J4l",
+          "name": "Redis account Lunnar"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "list_message1",
+        "key": "=list2_{{ $('Puxa os dados do contato - Audio e Mensagem').first().json.sender }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        6976,
+        2352
+      ],
+      "id": "7d09be5a-3c5c-4cc6-b02d-6454e0495e28",
+      "name": "Busca mais mensagens",
+      "credentials": {
+        "redis": {
+          "id": "sUeAsEPkI93F5J4l",
+          "name": "Redis account Lunnar"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "list_message",
+        "key": "=list2_{{ $('Puxa os dados do contato - Audio e Mensagem').first().json.sender }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        7632,
+        2256
+      ],
+      "id": "67a00917-3b4b-4b1d-814f-d136470f0dd9",
+      "name": "Busca mais mensagens apos a pausa",
+      "credentials": {
+        "redis": {
+          "id": "sUeAsEPkI93F5J4l",
+          "name": "Redis account Lunnar"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=list2_{{ $('Puxa os dados do contato - Audio e Mensagem').first().json.sender }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        7856,
+        2256
+      ],
+      "id": "0860d30c-4aa4-4e46-81c9-cdca50d72f87",
+      "name": "Deleta a lista de mensagens",
+      "credentials": {
+        "redis": {
+          "id": "sUeAsEPkI93F5J4l",
+          "name": "Redis account Lunnar"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1ab4d23-00ee-4a31-aeba-945229b6d1ad",
+              "name": "final_message",
+              "value": "={{ $('Busca mais mensagens apos a pausa').item.json.list_message.map(item => JSON.parse(item).text).join('\\n') }}",
+              "type": "string"
+            },
+            {
+              "id": "500b3070-d0c0-4302-bf22-f650f07a1e07",
+              "name": "sender",
+              "value": "={{ $('Puxa os dados do contato - Audio e Mensagem').item.json.sender }}",
+              "type": "string"
+            },
+            {
+              "id": "propagate_user_id",
+              "name": "user_id",
+              "value": "={{ $('Puxa os dados do contato - Audio e Mensagem').item.json.senderPhone }}",
+              "type": "string"
+            },
+            {
+              "id": "propagate_lead_id",
+              "name": "lead_id",
+              "value": "={{ $('Puxa os resultados da sincronia com o cliente').item.json.lead_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8048,
+        2256
+      ],
+      "id": "53c7137d-28de-4a8d-8857-0d21bbc90e48",
+      "name": "Pega a mensagem final + sender"
+    },
+    {
+      "parameters": {
+        "content": "## Node: Fluxo de envio de audio por mensagem (em desenvolvimento)",
+        "height": 272,
+        "width": 976
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5952,
+        1584
+      ],
+      "typeVersion": 1,
+      "id": "fbd078bf-4e86-4b58-a4fa-d62a2378f36b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Cron: Limpar mensagens do redis (em desenvolvimento)",
+        "height": 272,
+        "width": 688,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5424,
+        2672
+      ],
+      "id": "82014129-e48a-4e6b-a641-141264077c78",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "DQaXWlfDHMIOKd0O",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/DQaXWlfDHMIOKd0O",
+          "cachedResultName": "Node: Registrar erro"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "erro": "={{ JSON.stringify($json) }}",
+            "nome_do_node": "edge function - salvar a mensagem",
+            "data_do_erro": "={{ $now.format('yyyy-MM-dd') }}",
+            "body_enviado": "={\n  \"phone\": \"{{ $('Puxa os dados do contato - Audio e Mensagem').item.json.senderPhone }}\",\n  \"message\": \"{{ $('Puxa os dados do contato - Audio e Mensagem').item.json.message_full.text }}\",\n  \"direction\": \"incoming\",\n  \"sender_name\": \"{{ $('Puxa os dados do contato - Audio e Mensagem').item.json.senderName }}\"\n}\n",
+            "status": "={{ $json.statusCode }}",
+            "codigo": "={{ $json.error?.name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "erro",
+              "displayName": "erro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "nome_do_node",
+              "displayName": "nome_do_node",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "data_do_erro",
+              "displayName": "data_do_erro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "body_enviado",
+              "displayName": "body_enviado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "codigo",
+              "displayName": "codigo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        8512,
+        2464
+      ],
+      "id": "b63a7364-f8af-4c54-ad92-2bd693b30231",
+      "name": "Node: Registrar erro"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 1,
+              "triggerAtMinute": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        5472,
+        2752
+      ],
+      "id": "2d82fdae-3cf5-493a-a9e0-fa3131996e42",
+      "name": "Limpar mémoria do Redis 01h10am"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "list2_279039881306279@lid"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        5680,
+        2752
+      ],
+      "id": "7848b008-7521-483c-a2b8-0cccc8db78ad",
+      "name": "Redis limpar memoria e avisar no Discord",
+      "credentials": {
+        "redis": {
+          "id": "sUeAsEPkI93F5J4l",
+          "name": "Redis account Lunnar"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=Memoria do Redis limpa as:  {{ $json['Readable time'] }}\nHora: {{ $json.Hour }}\nMinuto: {{ $json.Minute }}\nSegundo: {{ $json.Second }}\nkey da lista do Redis: list2_279039881306279@lid\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        5872,
+        2752
+      ],
+      "id": "67bde740-d1ec-43c4-82f6-97021baa77d6",
+      "name": "Discord",
+      "webhookId": "d8145a41-5a23-473f-86df-257456c169d9",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "rLrFDYrYfY4vNk6d",
+          "name": "Webhook: Limpar memoria do Redis"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Node: Alertar usuario sobre erro no atendimento (em desenvolvimento)",
+        "height": 272,
+        "width": 512
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5424,
+        1584
+      ],
+      "typeVersion": 1,
+      "id": "8df3b1f7-a26b-4f26-8c6a-3b91d45d32be",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "77c77c02-a8e6-4501-9805-b3dcbd68c18f",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        9600,
+        1920
+      ],
+      "id": "7ff4ffac-f518-4370-bec5-9ba902f03658",
+      "name": "Puxar resultados da IA"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tslvpvamvwexzyiyoobx.supabase.co/functions/v1/save-whatsapp-message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-n8n-key",
+              "value": "keyn8n2026"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"phone\": \"{{ $('Puxa os dados do contato - Audio e Mensagem').item.json.senderPhone }}\",\n  \"message\": \"{{ $json['mensagem-normalizada'] }}\",\n  \"direction\": \"outgoing\",\n  \"sender_name\": \"Lunnar\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        10448,
+        1904
+      ],
+      "id": "d868bb7f-7587-4c58-82c7-6329cabfbe7b",
+      "name": "Edge function: save-whatsapp-message"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://planoagro.uazapi.com/message/presence",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "49529562-893f-4ac7-8ee6-85f7d0251e4d"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Puxa os dados do contato - Audio e Mensagem').item.json.senderPhone }}"
+            },
+            {
+              "name": "presence",
+              "value": "composing"
+            },
+            {
+              "name": "delay",
+              "value": "2000"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9808,
+        1920
+      ],
+      "id": "1fd1e446-10e5-4033-9bf5-1851dc0165e1",
+      "name": "uazapi - message/ presence",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://planoagro.uazapi.com/send/text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "49529562-893f-4ac7-8ee6-85f7d0251e4d"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Puxa os dados do contato - Audio e Mensagem').item.json.senderPhone }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Agente de atendimento').item.json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        10016,
+        1904
+      ],
+      "id": "adaed8ed-526e-4379-b72d-f90f3886bf3a",
+      "name": "uazapi: send/text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8504571a-af09-47b3-a801-073967be38c4",
+              "name": "mensagem-normalizada",
+              "value": "={{ $('Agente de atendimento').item.json.output.replace(/(\\r\\n|\\n|\\r)/gm, \" \") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        10224,
+        1904
+      ],
+      "id": "9fef9a69-26b1-4084-94fb-61e55b0e75df",
+      "name": "Puxa a mensagem final do Agente de Atendimento"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6cd402dd-81e3-4602-84ea-cb859d698f30",
+              "name": "sender",
+              "value": "={{ $json.sender }}",
+              "type": "string"
+            },
+            {
+              "id": "6ceec6b4-fabf-4416-a8fe-b0776c47ca35",
+              "name": "direction",
+              "value": "={{ $json.direction }}",
+              "type": "string"
+            },
+            {
+              "id": "18471142-8ed3-42ac-bc0c-1752889f9847",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "590a628d-245b-4532-abf5-1791a8234c7d",
+              "name": "contact_phone",
+              "value": "={{ $json.contact_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "a6982ce1-4a35-4f73-9ac1-6064fde605c9",
+              "name": "contact_name",
+              "value": "={{ $json.contact_name }}",
+              "type": "string"
+            },
+            {
+              "id": "bff77f69-3865-4a51-acea-61cbd827d045",
+              "name": "lead_id",
+              "value": "={{ $json.lead_id }}",
+              "type": "string"
+            },
+            {
+              "id": "fc39d38e-92a0-4f38-9480-af04a80db7f3",
+              "name": "message_id",
+              "value": "={{ $json.message_id }}",
+              "type": "string"
+            },
+            {
+              "id": "13ce7619-1297-4172-8907-70a0c579e20a",
+              "name": "ai_active",
+              "value": "={{ $json.ai_active }}",
+              "type": "boolean"
+            },
+            {
+              "id": "f5c17b85-823f-43a2-bba2-3b9089beb54b",
+              "name": "sucess",
+              "value": "={{ $json.sucess }}",
+              "type": "boolean"
+            },
+            {
+              "id": "eee71840-34ef-4288-9739-527134aaac21",
+              "name": "user_id",
+              "value": "={{ $json.user_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6544,
+        2352
+      ],
+      "id": "4eb7ee89-160e-48e5-be6b-c790e2bc65be",
+      "name": "Puxa os resultados da sincronia com o cliente"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        10864,
+        1904
+      ],
+      "id": "3fe85110-5b70-4667-a0a9-a31ef03441ff",
+      "name": "Parar fluxo"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "8HfhYri4nC3kLhna",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/8HfhYri4nC3kLhna",
+          "cachedResultName": "Node: Registrar erro Lunnar"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "erro": "={{ $json.error }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "erro",
+              "displayName": "erro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "nome_do_node",
+              "displayName": "nome_do_node",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "data_do_erro",
+              "displayName": "data_do_erro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "body_enviado",
+              "displayName": "body_enviado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "codigo",
+              "displayName": "codigo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        9600,
+        2144
+      ],
+      "id": "966a20ab-7dcd-4d69-9728-8515ca1a5840",
+      "name": "Node: Registrar erro no agente de atendimento"
+    },
+    {
+      "parameters": {
+        "description": "=\"Use esta ferramenta obrigatoriamente no início de cada nova sessão ou quando precisar confirmar sua identidade, tom de voz e regras de negócio específicas definidas pelo dono da conta. Ela retorna seu nome de exibição, o tom de voz esperado (ex: amigável, formal), o modelo de IA a ser seguido e instruções extras de comportamento (system_prompt). Requer o 'user_id' para localizar a configuração correta.\"",
+        "workflowId": {
+          "__rl": true,
+          "value": "PApAdaheXIUTuTEr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/PApAdaheXIUTuTEr",
+          "cachedResultName": "Node:  Consultar informacoes sobre o agente Lunnar"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $json.user_id }}"
+          },
+          "matchingColumns": [
+            "user_id"
+          ],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        9264,
+        2464
+      ],
+      "id": "0da57509-154c-4f4a-ae5d-2a875851b367",
+      "name": "Node: Consultar informacoes sobre o agente"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        8720,
+        2464
+      ],
+      "id": "73b38932-55be-4c0f-bd38-664ee85c630f",
+      "name": "Parar o fluxo antes da IA"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        9840,
+        2144
+      ],
+      "id": "386cad44-611f-413b-a741-ff4d66f9e529",
+      "name": "Parar o fluxo apos o erro do agente"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://planoagro.uazapi.com/message/presence",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "49529562-893f-4ac7-8ee6-85f7d0251e4d"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $json.senderPhone }}"
+            },
+            {
+              "name": "presence",
+              "value": "recording"
+            },
+            {
+              "name": "delay",
+              "value": "2000"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6016,
+        1664
+      ],
+      "id": "993828ba-7a83-469f-84f1-d2ad0e379026",
+      "name": "uazapi-enviar-presenca"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "model": "tts-1-hd",
+        "input": "=testando audio um, dois, tres e quatro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        6240,
+        1664
+      ],
+      "id": "af470e12-4f36-430d-9c46-64e4610e229a",
+      "name": "Enviar audio pela openai TTS-1-HD",
+      "credentials": {
+        "openAiApi": {
+          "id": "z5XHr9DqTmRHerBN",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "destinationKey": "audio_b64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        6464,
+        1664
+      ],
+      "id": "657c4f24-fc30-4837-98b2-2d6f8aec49ef",
+      "name": "Converte o audio em base44"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://planoagro.uazapi.com/send/media",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "49529562-893f-4ac7-8ee6-85f7d0251e4d"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $json.senderPhone }}"
+            },
+            {
+              "name": "type",
+              "value": "=ptt"
+            },
+            {
+              "name": "file",
+              "value": "={{ $json.audio_b64 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6688,
+        1664
+      ],
+      "id": "60b80747-e70b-4d97-94b6-5b21a1c5e079",
+      "name": "uazapi - enviar audio"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Bcq7uNIUV3PoZTnT",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Bcq7uNIUV3PoZTnT",
+          "cachedResultName": "Node: Salvar contato no supabase Lunnar"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $input.item.json.user_id }}",
+            "telefone": "={{ $('Puxa os dados do contato - Audio e Mensagem').item.json.senderPhone }}",
+            "mensagem": "={{ $('Puxa os dados do contato - Audio e Mensagem').item.json.text.concat() }}",
+            "sender_name": "={{ $('Puxa os dados do contato - Audio e Mensagem').item.json.senderName }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "mensagem",
+              "displayName": "mensagem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "sender_name",
+              "displayName": "sender_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        8608,
+        2096
+      ],
+      "id": "3b8c9174-22b9-4ab2-8c1f-ac0aacd443b3",
+      "name": "Node: Salvar contato no supabase"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "de331121-ea22-4c6f-9cc1-02025e300c09",
+                    "leftValue": "={{ $('Busca mais mensagens').first().json.list_message1.last().parseJson().messageTimestamp.toDateTime('ms') }}",
+                    "rightValue": "={{ $now.minus(10, 'seconds') }}",
+                    "operator": {
+                      "type": "dateTime",
+                      "operation": "before"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "timeout"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "wait"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        7312,
+        2352
+      ],
+      "id": "fe39ef64-cc3e-4b78-9638-d14ce254d257",
+      "name": "Checa se tem mais mensagens"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ '[DADOS INTERNOS - NÃO MENCIONAR AO CLIENTE]\\nlead_id: ' + $('Pega a mensagem final + sender').item.json.lead_id + '\\nuser_id: ' + $('Pega a mensagem final + sender').item.json.user_id + '\\n\\n[MENSAGEM DO CLIENTE]\\n' + $('Pega a mensagem final + sender').item.json.final_message }}",
+        "options": {
+          "systemMessage": "=🎯 AGENTE LUNNAR - ESPECIALISTA EM VENDAS\n\nVocê é um consultor especializado de vendas. Sua tarefa principal é processar clientes, adotar tons de comunicação customizados e consultar os produtos reais antes de oferecê-los.\n\n⚡ PROTOCOLO DE INICIALIZAÇÃO (PRIMEIRA MENSAGEM)\nSempre que receber a PRIMEIRA mensagem do cliente (\"Oi\", \"Olá\", etc.), você deve invisivelmente:\n1. Usar a ferramenta 'Consultar informacoes sobre o agente'.\n2. Usar a ferramenta 'Consultar portfolio' para ver todos os produtos (deixe a query vazia).\n3. Responder ao cliente usando as informações encontradas: usando o nome do agente (agent_name), o tom de voz definido (ai_tone) e priorizando o 'system_prompt'.\n4. Usar a ferramenta 'atualizar_status_lead' marcando o status como \"cold\" e anotando que é o primeiro contato.\n\n🎨 ADAPTAÇÃO DE TOM DE VOZ (ai_tone):\n- \"amigavel\": Emojis livres (2-3), gírias permitidas (\"Opa! Tudo bem?\").\n- \"profissional\": 1 emoji no máximo, linguagem formal (\"Como posso auxiliá-lo?\").\n- \"consultivo\": Pergunte os desafios do cliente antes de apresentar soluções.\n- \"direto\": Sem rodeios, CTAs claros, foco em fechar conversão rápida.\n\n🛠️ REGRAS DE USO DAS FERRAMENTAS:\n\n1. Consultar portfolio:\n- Use para listar categorias, consultar a existência de um produto, ou pegar preços.\n- Campo 'query': Coloque o objeto a ser buscado (ex: \"sensor\"). Se o cliente perguntar \"o que você tem?\", passe o campo 'query' VAZIO para listar tudo.\n- Campo 'stock_status' (Opcional): Se o lead quiser apenas itens disponíveis, passe \"in_stock\". Se quiser todos, deixe em branco. NÃO INVENTE PRODUTOS DA SUA CABEÇA.\n\n2. atualizar_status_lead:\nAtualize SEMPRE que o cliente avançar na jornada:\n- Status \"hot\": Cliente quer comprar. Pede PIX, formas de pagamento, e preenche dados cadastrais.\n- Status \"warm\": Cliente faz múltiplas perguntas sobre o mesmo tipo de produto, comparando opções e buscando detalhes técnicos.\n- Status \"cold\": Respostas monossilábicas, apenas pedindo preço, e ao iniciar o primeiro contato.\nDICA CRÍTICA: Os status DEVEM EXATAMENTE SER \"hot\", \"warm\" ou \"cold\" (Tudo minúsculo). Descreva nas 'notas' os detalhes técnicos do motivo.\n\n\nINSTRUÇÕES ESPECÍFICAS DA EMPRESA:\nAqui estão as regras personalizadas definidas para esta empresa no painel Lunnar:\n{{ $node[\"Prompt do user\"].json.system_prompt }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        9088,
+        2096
+      ],
+      "id": "83f712a3-c803-4177-99f1-52e8210bbba9",
+      "name": "Agente de atendimento",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Puxa os dados do contato - Audio e Mensagem').item.json.sender }}",
+        "sessionTTL": 600,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        9168,
+        2352
+      ],
+      "id": "d1678f2e-b878-4c60-a867-c942af3e989f",
+      "name": "Redis: memoria",
+      "credentials": {
+        "redis": {
+          "id": "sUeAsEPkI93F5J4l",
+          "name": "Redis account Lunnar"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2ankellzgfe8SMZ0",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2ankellzgfe8SMZ0",
+          "cachedResultName": "Node: Sincronizar chat"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sender": "bot",
+            "direction": "outbound",
+            "content": "={{ $('Agente de atendimento').item.json.output }}",
+            "contact_phone": "={{ $('Puxa os dados do contato - Audio e Mensagem').item.json.senderPhone }}",
+            "contact_name": "Pilot"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sender",
+              "displayName": "sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "contact_phone",
+              "displayName": "contact_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "contact_name",
+              "displayName": "contact_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        10656,
+        1904
+      ],
+      "id": "023f70b8-f90e-4d05-96f9-3de90c01ba60",
+      "name": "Node: Sincronizar chat-bot"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2ankellzgfe8SMZ0",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2ankellzgfe8SMZ0",
+          "cachedResultName": "Node: Sincronizar chat"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "content": "={{ $json.message_full.text }}",
+            "sender": "client",
+            "direction": "inbound",
+            "contact_name": "={{ $json.senderName }}",
+            "contact_phone": "={{ $json.senderPhone }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sender",
+              "displayName": "sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "contact_phone",
+              "displayName": "contact_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "contact_name",
+              "displayName": "contact_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        6336,
+        2352
+      ],
+      "id": "15548eae-0578-4fdf-bd2d-fa68f20bc0fb",
+      "name": "Node: Sincronizar chat-client"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-lunnar",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        5456,
+        2336
+      ],
+      "id": "9160fcfe-1cb0-405c-a9a2-22ef5a90e312",
+      "name": "Webhook",
+      "webhookId": "47c9dc01-4102-424b-8750-0241274129a3"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        7632,
+        2432
+      ],
+      "id": "46bcdce6-277b-4497-af64-d2d6e598a29f",
+      "name": "espera 10 segundos",
+      "webhookId": "a44581e2-0e52-42d1-84fd-e54b49e2b091"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        9024,
+        2320
+      ],
+      "id": "1fb797e2-7c61-45af-a4be-0100a45036a0",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "unB9I3ACt395L3nq",
+          "name": "Lunnar Openrouter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "agent_config",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $json.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        8816,
+        2096
+      ],
+      "id": "4bde2bdd-301b-40eb-8836-6aed66e46dad",
+      "name": "Prompt do user",
+      "credentials": {
+        "supabaseApi": {
+          "id": "aPRvTwa2TfYvYt41",
+          "name": "Supabase Lunnar"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "\"Utilize esta ferramenta obrigatoriamente SEMPRE que o cliente desejar agendar um horário (ou data) com a equipe ou para fazer um serviço. Forneça o lead_id, nome_cliente, telefone_cliente, a data_hora no formato de data ISO e em notas adicione os detalhes que o cliente quer para a consulta.\"",
+        "workflowId": {
+          "__rl": true,
+          "value": "KTQDc2CY9pZDITdM",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/KTQDc2CY9pZDITdM",
+          "cachedResultName": "Node: Agendar_horario Lunnar"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "nome_cliente": "={{$fromAI(\"nome_cliente\")}}",
+            "telefone_cliente": "={{$fromAI(\"telefone_cliente\")}}",
+            "data_hora": "={{$fromAI(\"data_hora\")}}",
+            "notas": "={{$fromAI(\"notas\")}}",
+            "user_id": "={{ $('Puxa os resultados da sincronia com o cliente').item.json.user_id }}",
+            "lead_id": "={{ $('Puxa os resultados da sincronia com o cliente').item.json.lead_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "nome_cliente",
+              "displayName": "nome_cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "telefone_cliente",
+              "displayName": "telefone_cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "data_hora",
+              "displayName": "data_hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "notas",
+              "displayName": "notas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        9616,
+        2480
+      ],
+      "id": "f9b8c60d-8218-40be-b008-6fe21b632f57",
+      "name": "Node: Agendar Horário"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edge function - salvar a mensagem": {
+      "main": [
+        [
+          {
+            "node": "Node: Salvar contato no supabase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Node: Registrar erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node: atualizar_status_lead": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de atendimento",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtra o tipo da mensagem": {
+      "main": [
+        [
+          {
+            "node": "uazapi - transcrição de audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Puxa os dados do contato - Audio e Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "uazapi - transcrição de audio": {
+      "main": [
+        [
+          {
+            "node": "Puxa os dados do contato - Audio e Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Puxa os dados do contato - Audio e Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Node: Sincronizar chat-client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adiciona mensagem ao redis": {
+      "main": [
+        [
+          {
+            "node": "Busca mais mensagens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca mais mensagens": {
+      "main": [
+        [
+          {
+            "node": "Checa se tem mais mensagens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca mais mensagens apos a pausa": {
+      "main": [
+        [
+          {
+            "node": "Deleta a lista de mensagens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deleta a lista de mensagens": {
+      "main": [
+        [
+          {
+            "node": "Pega a mensagem final + sender",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pega a mensagem final + sender": {
+      "main": [
+        [
+          {
+            "node": "Edge function - salvar a mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node: Registrar erro": {
+      "main": [
+        [
+          {
+            "node": "Parar o fluxo antes da IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpar mémoria do Redis 01h10am": {
+      "main": [
+        [
+          {
+            "node": "Redis limpar memoria e avisar no Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis limpar memoria e avisar no Discord": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Puxar resultados da IA": {
+      "main": [
+        [
+          {
+            "node": "uazapi - message/ presence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edge function: save-whatsapp-message": {
+      "main": [
+        [
+          {
+            "node": "Node: Sincronizar chat-bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "uazapi - message/ presence": {
+      "main": [
+        [
+          {
+            "node": "uazapi: send/text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "uazapi: send/text": {
+      "main": [
+        [
+          {
+            "node": "Puxa a mensagem final do Agente de Atendimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Puxa a mensagem final do Agente de Atendimento": {
+      "main": [
+        [
+          {
+            "node": "Edge function: save-whatsapp-message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Puxa os resultados da sincronia com o cliente": {
+      "main": [
+        [
+          {
+            "node": "Adiciona mensagem ao redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node: Registrar erro no agente de atendimento": {
+      "main": [
+        [
+          {
+            "node": "Parar o fluxo apos o erro do agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node: Consultar informacoes sobre o agente": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de atendimento",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "uazapi-enviar-presenca": {
+      "main": [
+        [
+          {
+            "node": "Enviar audio pela openai TTS-1-HD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar audio pela openai TTS-1-HD": {
+      "main": [
+        [
+          {
+            "node": "Converte o audio em base44",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Converte o audio em base44": {
+      "main": [
+        [
+          {
+            "node": "uazapi - enviar audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node: Salvar contato no supabase": {
+      "main": [
+        [
+          {
+            "node": "Prompt do user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checa se tem mais mensagens": {
+      "main": [
+        [
+          {
+            "node": "Busca mais mensagens apos a pausa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "espera 10 segundos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente de atendimento": {
+      "main": [
+        [
+          {
+            "node": "Puxar resultados da IA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Node: Registrar erro no agente de atendimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: memoria": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente de atendimento",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node: Sincronizar chat-bot": {
+      "main": [
+        [
+          {
+            "node": "Parar fluxo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node: Sincronizar chat-client": {
+      "main": [
+        [
+          {
+            "node": "Puxa os resultados da sincronia com o cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filtra o tipo da mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "espera 10 segundos": {
+      "main": [
+        [
+          {
+            "node": "Busca mais mensagens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente de atendimento",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt do user": {
+      "main": [
+        [
+          {
+            "node": "Agente de atendimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node: Agendar Horário": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de atendimento",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3453fca4-0235-4493-a7b4-62f0b7344a75",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0238e6ceb447c65187f4f2e0419beae38e88bd45a119cc3f79f9c226286dd6b6"
+  },
+  "id": "vFAqW7g99HlvEfcu",
+  "tags": []
+}

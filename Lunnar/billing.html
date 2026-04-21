@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Assinatura</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- Design System: Neutros & Apple-style --- */
+        :root {
+            --bg-canvas: #FFFFFF;
+            --bg-secondary: #F5F5F7;
+            --text-primary: #1D1D1F;
+            --text-secondary: #86868B;
+            --border-color: #E5E5E5;
+            --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --radius-lg: 20px;
+            --radius-md: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            line-height: 1.5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        /* --- Header --- */
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.022em;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            font-weight: 400;
+        }
+
+        /* --- Toggle Switch --- */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            background-color: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 100px;
+            width: fit-content;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .toggle-option {
+            padding: 0.6rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 2;
+            transition: var(--transition-smooth);
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toggle-option.active {
+            color: var(--text-primary);
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .toggle-option:not(.active) {
+            color: var(--text-secondary);
+        }
+
+        .badge {
+            background-color: var(--text-primary);
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 100px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* --- Pricing Card --- */
+        .pricing-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 3rem 2rem;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition-smooth);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+        }
+
+        .price-container {
+            margin-bottom: 0.5rem;
+        }
+
+        .price-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 0.2rem;
+        }
+
+        .currency {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .period {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .billing-subtext {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            min-height: 1.25rem;
+        }
+
+        /* --- CTA Button --- */
+        .cta-button {
+            width: 100%;
+            background-color: var(--text-primary);
+            color: #FFFFFF;
+            border: none;
+            padding: 1.25rem;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .cta-button:hover {
+            background-color: #000000;
+            transform: scale(1.01);
+        }
+
+        .cta-button:active {
+            transform: scale(0.98);
+        }
+
+        /* --- Account Management --- */
+        .management-footer {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .cancel-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            width: fit-content;
+            margin: 0 auto;
+            transition: var(--transition-smooth);
+        }
+
+        .cancel-link:hover {
+            color: var(--text-primary);
+            background-color: var(--bg-secondary);
+            border-color: #D1D1D6;
+        }
+
+        .disclaimer {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        /* --- Utilities --- */
+        .hidden { display: none; }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Responsividade --- */
+        @media (max-width: 480px) {
+            body { padding: 1.5rem; }
+            header h1 { font-size: 2rem; }
+            .pricing-card { padding: 2rem 1.5rem; }
+            .price-value { font-size: 2.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container animate-fade-in">
+        <header>
+            <h1>Sua Assinatura</h1>
+            <p>Escolha o plano ideal para acelerar seu negócio.</p>
+        </header>
+
+        <div class="toggle-container">
+            <div id="monthly-toggle" class="toggle-option active" onclick="setBilling('monthly')">Mensal</div>
+            <div id="annual-toggle" class="toggle-option" onclick="setBilling('annual')">
+                Anual
+                <span class="badge">Econômico</span>
+            </div>
+        </div>
+
+        <div class="pricing-card">
+            <div class="price-container">
+                <div class="price-value">
+                    <span class="currency">R$</span>
+                    <span id="price-amount">290</span>
+                    <span class="period">/ mês</span>
+                </div>
+                <div id="billing-info" class="billing-subtext"></div>
+            </div>
+
+            <!-- Botão com ID específico para integração posterior com Stripe -->
+            <button class="cta-button" id="stripe-checkout-button">Atualizar Plano</button>
+        </div>
+
+        <div class="management-footer">
+            <a href="#" class="cancel-link" id="cancel-subscription-link">Cancelar Assinatura</a>
+            <p class="disclaimer">Cancelamento imediato sem taxas ocultas. Seu acesso permanece até o fim do período vigente.</p>
+        </div>
+    </div>
+
+    <script>
+        function setBilling(type) {
+            const monthlyToggle = document.getElementById('monthly-toggle');
+            const annualToggle = document.getElementById('annual-toggle');
+            const priceAmount = document.getElementById('price-amount');
+            const billingInfo = document.getElementById('billing-info');
+            const card = document.querySelector('.pricing-card');
+
+            // Reset classes
+            monthlyToggle.classList.remove('active');
+            annualToggle.classList.remove('active');
+
+            // Add animation class
+            priceAmount.parentElement.classList.add('fade-in');
+            setTimeout(() => {
+                priceAmount.parentElement.classList.remove('fade-in');
+            }, 400);
+
+            if (type === 'monthly') {
+                monthlyToggle.classList.add('active');
+                priceAmount.innerText = '290';
+                billingInfo.innerText = '';
+            } else {
+                annualToggle.classList.add('active');
+                priceAmount.innerText = '250';
+                billingInfo.innerText = 'faturado anualmente';
+            }
+        }
+    </script>
+</body>
+</html>

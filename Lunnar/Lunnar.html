@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acelo | Autenticação</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            canvas: '#FDFDF5',
+                            dark: '#121212',
+                            darkSurface: '#1E1E1E',
+                            navy: '#102C57',
+                            slate: '#1A1A1A'
+                        }
+                    },
+                    fontFamily: {
+                        heading: ['"Instrument Sans"', 'sans-serif'],
+                        body: ['"Inter"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
+                        'dark-soft': '0 10px 40px -10px rgba(0,0,0,0.5)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Instrument Sans', sans-serif;
+        }
+        .btn-hover-effect {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-hover-effect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(16, 44, 87, 0.3);
+        }
+        
+        /* Input styles */
+        .input-field {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            background-color: white;
+            transition: all 0.2s ease;
+            outline: none;
+            color: #1A1A1A;
+        }
+        .input-field:focus {
+            border-color: #102C57;
+            box-shadow: 0 0 0 3px rgba(16, 44, 87, 0.1);
+        }
+        
+        /* Dark mode inputs */
+        .dark .input-field {
+            background-color: #1A1A1A;
+            border-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .dark .input-field:focus {
+            border-color: #102C57;
+            box-shadow: 0 0 0 3px rgba(16, 44, 87, 0.3);
+        }
+        
+        /* Animation states */
+        .fade-enter { opacity: 0; transform: translateY(10px); }
+        .fade-enter-active { opacity: 1; transform: translateY(0); transition: opacity 400ms, transform 400ms; }
+    </style>
+
+    <!-- React and ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-brand-canvas text-brand-slate dark:bg-brand-dark dark:text-gray-100 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const supabaseUrl = 'https://tslvpvamvwexzyiyoobx.supabase.co';
+        const supabaseKey = 'sb_publishable_NoErqD-ZmgszMs1HmZPYqA_ucJ-H78l';
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        const Icon = ({ name, className }) => {
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        const ThemeToggle = ({ theme, toggleTheme }) => (
+            <button 
+                onClick={toggleTheme} 
+                className="absolute top-6 right-6 p-3 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition-colors z-50 cursor-pointer"
+                aria-label="Alternar tema"
+            >
+                <span key={theme} className="flex"><Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5 text-brand-slate dark:text-white" /></span>
+            </button>
+        );
+
+        const ScreenSignIn = ({ onNavigate }) => {
+            const [loading, setLoading] = useState(false);
+            const [errorMsg, setErrorMsg] = useState('');
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setErrorMsg('');
+                
+                try {
+                    const email = e.target.email.value;
+                    const password = e.target.password.value;
+                    
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                    
+                    if (error) {
+                        const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ 
+                            email, 
+                            password,
+                            options: { data: { full_name: email.split('@')[0] } }
+                        });
+                        
+                        if (!signUpError && signUpData && signUpData.user) {
+                            window.location.href = 'onboarding.html';
+                            return;
+                        }
+                        
+                        setErrorMsg(`Erro SignIn: ${error.message} | Erro SignUp: ${signUpError?.message}`);
+                        setLoading(false);
+                        return;
+                    }
+                    
+                    window.location.href = 'dashboard.html';
+                } catch (err) {
+                    console.error("Fatal Error: ", err);
+                    setErrorMsg("Tivemos um problema técnico (Navegador bloqueando algo ou sem rede): " + err.message);
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="w-full max-w-md mx-auto p-8 sm:p-12 bg-white dark:bg-brand-darkSurface rounded-3xl shadow-soft dark:shadow-dark-soft border border-black/5 dark:border-white/5 animate-[fadeIn_0.5s_ease-out]">
+                    <div className="flex justify-center mb-8">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-navy flex items-center justify-center">
+                            <Icon name="moon" className="text-[#FDFDF5] fill-current w-6 h-6" />
+                        </div>
+                    </div>
+                    
+                    <div className="text-center mb-10">
+                        <h1 className="font-heading font-bold text-3xl mb-2 text-brand-slate dark:text-white">Bem-vindo de volta</h1>
+                        <p className="text-brand-slate/60 dark:text-gray-400 text-sm">Acesso exclusivo à rede Acelo</p>
+                    </div>
+
+                    {errorMsg && <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-600 text-sm font-medium border border-red-100 dark:bg-red-500/10 dark:border-red-500/20">{errorMsg}</div>}
+
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div>
+                            <label className="block text-sm font-semibold mb-2 text-brand-slate/80 dark:text-gray-300">E-mail</label>
+                            <input type="email" name="email" placeholder="seu@email.com" className="input-field" required />
+                        </div>
+                        <div>
+                            <div className="flex justify-between mb-2">
+                                <label className="block text-sm font-semibold text-brand-slate/80 dark:text-gray-300">Senha</label>
+                                <button type="button" onClick={() => onNavigate('forgotPassword')} className="text-sm font-semibold text-brand-navy hover:underline focus:outline-none">Esqueceu a senha?</button>
+                            </div>
+                            <input type="password" name="password" placeholder="••••••••" className="input-field" required />
+                        </div>
+                        
+                        <button type="submit" disabled={loading} className="w-full py-4 rounded-xl bg-brand-navy text-[#FDFDF5] font-semibold text-lg btn-hover-effect mt-8 disabled:opacity-70 disabled:cursor-not-allowed">
+                            {loading ? 'Entrando...' : 'Entrar'}
+                        </button>
+                    </form>
+
+                    <p className="mt-8 text-center text-sm text-brand-slate/60 dark:text-gray-400">
+                        Ainda não tem convite?{' '}
+                        <button onClick={() => onNavigate('signUp')} type="button" className="font-semibold text-brand-navy hover:underline focus:outline-none">
+                            Solicitar acesso
+                        </button>
+                    </p>
+                </div>
+            );
+        };
+
+        const ScreenForgotPassword = ({ onNavigate }) => {
+            const [loading, setLoading] = useState(false);
+            const [successMsg, setSuccessMsg] = useState('');
+            const [errorMsg, setErrorMsg] = useState('');
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setErrorMsg('');
+                setSuccessMsg('');
+                
+                const email = e.target.email.value;
+
+                const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + window.location.pathname.replace('Acelo.html', 'dashboard.html'),
+                });
+                
+                if (error) {
+                    setErrorMsg('Erro: ' + error.message);
+                    setLoading(false);
+                    return;
+                }
+
+                setSuccessMsg('Um e-mail de recuperação foi enviado para ' + email + '. Por favor, verifique sua caixa de entrada.');
+                setLoading(false);
+            };
+
+            return (
+                <div className="w-full max-w-md mx-auto p-8 sm:p-12 bg-white dark:bg-brand-darkSurface rounded-3xl shadow-soft dark:shadow-dark-soft border border-black/5 dark:border-white/5 animate-[fadeIn_0.5s_ease-out]">
+                    <div className="flex justify-center mb-8">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-navy flex items-center justify-center">
+                            <Icon name="key" className="text-[#FDFDF5] w-6 h-6" />
+                        </div>
+                    </div>
+                    
+                    <div className="text-center mb-10">
+                        <h1 className="font-heading font-bold text-3xl mb-2 text-brand-slate dark:text-white">Recuperar Senha</h1>
+                        <p className="text-brand-slate/60 dark:text-gray-400 text-sm">Digite seu e-mail para receber um link de redefinição.</p>
+                    </div>
+
+                    {errorMsg && <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-600 text-sm font-medium border border-red-100 dark:bg-red-500/10 dark:border-red-500/20">{errorMsg}</div>}
+                    {successMsg && <div className="mb-6 p-4 rounded-xl bg-green-50 text-green-700 text-sm font-medium border border-green-100 dark:bg-green-500/10 dark:border-green-500/20">{successMsg}</div>}
+
+                    {!successMsg ? (
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <div>
+                                <label className="block text-sm font-semibold mb-2 text-brand-slate/80 dark:text-gray-300">E-mail cadastrado</label>
+                                <input type="email" name="email" placeholder="seu@email.com" className="input-field" required />
+                            </div>
+                            
+                            <button type="submit" disabled={loading} className="w-full py-4 rounded-xl bg-brand-navy text-[#FDFDF5] font-semibold text-lg btn-hover-effect mt-8 disabled:opacity-70 disabled:cursor-not-allowed">
+                                {loading ? 'Enviando...' : 'Enviar Link de Recuperação'}
+                            </button>
+                        </form>
+                    ) : (
+                        <button onClick={() => onNavigate('signIn')} className="w-full py-4 rounded-xl bg-brand-navy text-[#FDFDF5] font-semibold text-lg btn-hover-effect mt-8">
+                            Voltar para o Login
+                        </button>
+                    )}
+
+                    {!successMsg && (
+                        <p className="mt-8 text-center text-sm text-brand-slate/60 dark:text-gray-400">
+                            Lembrou a senha?{' '}
+                            <button onClick={() => onNavigate('signIn')} type="button" className="font-semibold text-brand-navy hover:underline focus:outline-none">
+                                Voltar para o Login
+                            </button>
+                        </p>
+                    )}
+                </div>
+            );
+        };
+
+        const ScreenSignUp = ({ onNavigate }) => {
+            const [loading, setLoading] = useState(false);
+            const [errorMsg, setErrorMsg] = useState('');
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setErrorMsg('');
+                
+                const fullName = e.target.fullName.value;
+                const email = e.target.email.value;
+                const password = e.target.password.value;
+
+                const { data, error } = await supabaseClient.auth.signUp({ 
+                    email, 
+                    password,
+                    options: { data: { full_name: fullName } }
+                });
+                
+                if (error) {
+                    setErrorMsg('Erro: ' + error.message);
+                    setLoading(false);
+                    return;
+                }
+
+                // Redirect to onboarding workflow since it's a new sign up
+                window.location.href = 'onboarding.html';
+            };
+
+            return (
+                <div className="w-full max-w-md mx-auto p-8 sm:p-12 bg-white dark:bg-brand-darkSurface rounded-3xl shadow-soft dark:shadow-dark-soft border border-black/5 dark:border-white/5 animate-[fadeIn_0.5s_ease-out]">
+                    <div className="flex justify-center mb-8">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-navy flex items-center justify-center">
+                            <Icon name="sparkles" className="text-[#FDFDF5] w-6 h-6" />
+                        </div>
+                    </div>
+                    
+                    <div className="text-center mb-10">
+                        <h1 className="font-heading font-bold text-3xl mb-2 text-brand-slate dark:text-white">Solicitar Acesso</h1>
+                        <p className="text-brand-slate/60 dark:text-gray-400 text-sm">Junte-se ao ecossistema premium da Acelo</p>
+                    </div>
+
+                    {errorMsg && <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-600 text-sm font-medium border border-red-100 dark:bg-red-500/10 dark:border-red-500/20">{errorMsg}</div>}
+
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div>
+                            <label className="block text-sm font-semibold mb-2 text-brand-slate/80 dark:text-gray-300">Nome completo</label>
+                            <input type="text" name="fullName" placeholder="Como devemos chamá-lo?" className="input-field" required />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold mb-2 text-brand-slate/80 dark:text-gray-300">E-mail corporativo</label>
+                            <input type="email" name="email" placeholder="seu@email.com" className="input-field" required />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold mb-2 text-brand-slate/80 dark:text-gray-300">Senha</label>
+                            <input type="password" name="password" placeholder="••••••••" className="input-field" required minLength="6" />
+                        </div>
+                        
+                        <button type="submit" disabled={loading} className="w-full py-4 rounded-xl bg-brand-navy text-[#FDFDF5] font-semibold text-lg btn-hover-effect mt-8 disabled:opacity-70 disabled:cursor-not-allowed">
+                            {loading ? 'Criando Conta...' : 'Criar Conta'}
+                        </button>
+                    </form>
+
+                    <p className="mt-8 text-center text-sm text-brand-slate/60 dark:text-gray-400">
+                        Já possui uma conta?{' '}
+                        <button onClick={() => onNavigate('signIn')} type="button" className="font-semibold text-brand-navy hover:underline focus:outline-none">
+                            Entrar
+                        </button>
+                    </p>
+                </div>
+            );
+        };
+
+        const ScreenPendingApprove = ({ onNavigate }) => {
+            return (
+                <div className="w-full max-w-md mx-auto p-8 sm:p-12 bg-white dark:bg-brand-darkSurface rounded-3xl shadow-soft dark:shadow-dark-soft border border-black/5 dark:border-white/5 animate-[fadeIn_0.5s_ease-out] text-center">
+                    <div className="relative w-20 h-20 mx-auto mb-8 bg-brand-navy/10 dark:bg-brand-navy/20 rounded-full flex items-center justify-center">
+                        <Icon name="hourglass" className="text-brand-navy w-10 h-10 animate-pulse" strokeWidth={1.5} />
+                    </div>
+                    
+                    <h1 className="font-heading font-bold text-3xl mb-4 text-brand-slate dark:text-white">Quase lá!</h1>
+                    
+                    <p className="text-brand-slate/70 dark:text-gray-400 text-base leading-relaxed mb-10">
+                        Seu cadastro foi enviado para nossa equipe. Para manter a exclusividade da rede Acelo, 
+                        <span className="font-semibold text-brand-slate dark:text-gray-200"> aprovamos cada conta manualmente.</span><br/><br/>
+                        Você receberá um e-mail de aviso assim que seu escopo for liberado para acesso completo.
+                    </p>
+
+                    <div className="space-y-4">
+                        <button 
+                            onClick={async () => {
+                                await supabaseClient.auth.signOut();
+                                onNavigate('signIn');
+                            }} 
+                            className="w-full py-3.5 rounded-xl border-2 border-brand-navy/10 text-brand-navy dark:text-white dark:border-white/10 hover:bg-brand-navy/5 dark:hover:bg-white/5 font-semibold text-base transition-colors"
+                        >
+                            Sair da conta
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [currentScreen, setCurrentScreen] = useState('signUp'); // Start on signup naturally
+            const [theme, setTheme] = useState('light');
+            const [checkingAuth, setCheckingAuth] = useState(true);
+
+            useEffect(() => {
+                const checkSession = async () => {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (session) {
+                        window.location.href = 'dashboard.html';
+                    }
+                    setCheckingAuth(false);
+                };
+                checkSession();
+
+                // Check system preference on load
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    setTheme('dark');
+                    document.documentElement.classList.add('dark');
+                }
+            }, []);
+
+            // Re-render icons whenever screen or theme changes
+            useEffect(() => {
+                lucide.createIcons();
+            }, [currentScreen, theme, checkingAuth]);
+
+            if (checkingAuth) return null;
+
+            const toggleTheme = () => {
+                const newTheme = theme === 'light' ? 'dark' : 'light';
+                setTheme(newTheme);
+                if (newTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            };
+
+            return (
+                <div className="min-h-screen py-12 px-6 flex flex-col justify-center relative overflow-hidden transition-colors duration-300">
+                    {/* Background decorations */}
+                    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-navy/5 dark:bg-brand-navy/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 -z-10 pointer-events-none transition-colors duration-300"></div>
+                    <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-navy/5 dark:bg-brand-navy/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2 -z-10 pointer-events-none transition-colors duration-300"></div>
+
+                    <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+                    
+                    <div className="w-full z-10">
+                        {/* Logo header */}
+                        <div className="text-center mb-10">
+                            <span className="font-heading font-bold text-2xl tracking-tight text-brand-slate dark:text-white transition-colors duration-300 flex items-center justify-center gap-2">
+                                <Icon name="moon" className="text-brand-navy fill-brand-navy w-6 h-6" />
+                                Acelo
+                            </span>
+                        </div>
+
+                        {/* Screen routing */}
+                        {currentScreen === 'signIn' && <ScreenSignIn onNavigate={setCurrentScreen} />}
+                        {currentScreen === 'signUp' && <ScreenSignUp onNavigate={setCurrentScreen} />}
+                        {currentScreen === 'pending' && <ScreenPendingApprove onNavigate={setCurrentScreen} />}
+                        {currentScreen === 'forgotPassword' && <ScreenForgotPassword onNavigate={setCurrentScreen} />}
+                    </div>
+                    
+                    {/* Inject simple CSS animation for mounting components */}
+                    <style>{`
+                        @keyframes fadeIn {
+                            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+                            to { opacity: 1; transform: translateY(0) scale(1); }
+                        }
+                    `}</style>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

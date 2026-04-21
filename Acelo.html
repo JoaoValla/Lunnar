@@ -109,10 +109,23 @@
         const { useState, useEffect } = React;
         const supabaseUrl = 'https://tslvpvamvwexzyiyoobx.supabase.co';
         const supabaseKey = 'sb_publishable_NoErqD-ZmgszMs1HmZPYqA_ucJ-H78l';
-        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        let supabaseClient;
+        try {
+            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        } catch (e) {
+            console.error("Erro ao inicializar Supabase:", e);
+        }
 
         const Icon = ({ name, className }) => {
-            return <i data-lucide={name} className={className}></i>;
+            const ref = React.useRef(null);
+            React.useEffect(() => {
+                if(ref.current && window.lucide) {
+                    ref.current.innerHTML = `<i data-lucide="${name}" class="${className || ''}"></i>`;
+                    window.lucide.createIcons({ root: ref.current });
+                }
+            }, [name, className]);
+            return <span ref={ref} style={{display: 'contents'}}></span>;
         };
 
         const ThemeToggle = ({ theme, toggleTheme }) => (
@@ -390,11 +403,18 @@
 
             useEffect(() => {
                 const checkSession = async () => {
-                    const { data: { session } } = await supabaseClient.auth.getSession();
-                    if (session) {
-                        window.location.href = 'dashboard.html';
+                    try {
+                        if (!supabaseClient) throw new Error("Supabase não inicializado");
+                        const { data: { session }, error } = await supabaseClient.auth.getSession();
+                        if (error) throw error;
+                        if (session) {
+                            window.location.href = 'dashboard.html';
+                        }
+                    } catch (err) {
+                        console.error("Auth check failed:", err);
+                    } finally {
+                        setCheckingAuth(false);
                     }
-                    setCheckingAuth(false);
                 };
                 checkSession();
 
@@ -405,12 +425,19 @@
                 }
             }, []);
 
-            // Re-render icons whenever screen or theme changes
             useEffect(() => {
-                lucide.createIcons();
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
             }, [currentScreen, theme, checkingAuth]);
 
-            if (checkingAuth) return null;
+            if (checkingAuth) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-brand-canvas dark:bg-brand-dark">
+                        <div className="w-12 h-12 border-4 border-brand-navy border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                );
+            }
 
             const toggleTheme = () => {
                 const newTheme = theme === 'light' ? 'dark' : 'light';

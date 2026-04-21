@@ -89,9 +89,9 @@
         .fade-enter-active { opacity: 1; transform: translateY(0); transition: opacity 400ms, transform 400ms; }
     </style>
 
-    <!-- React and ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- React and ReactDOM (Production) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -103,7 +103,30 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-brand-canvas text-brand-slate dark:bg-brand-dark dark:text-gray-100 min-h-screen">
-    <div id="root"></div>
+    <div id="root">
+        <div id="initial-loader" class="flex items-center justify-center min-h-screen">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-navy"></div>
+            <p class="ml-3 font-medium text-brand-navy">Iniciando Acelo...</p>
+        </div>
+    </div>
+
+    <div id="error-display" class="hidden fixed inset-0 z-[9999] bg-red-50 p-10 overflow-auto font-mono text-red-800">
+        <h1 class="text-2xl font-bold mb-4">Erro Crítico de Execução (Login)</h1>
+        <div id="error-content" class="bg-white p-4 rounded border border-red-200"></div>
+        <button onclick="window.location.reload()" class="mt-4 px-6 py-2 bg-red-600 text-white rounded">Tentar Recarregar</button>
+    </div>
+
+    <script>
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            const display = document.getElementById('error-display');
+            const content = document.getElementById('error-content');
+            if (display && content) {
+                display.classList.remove('hidden');
+                content.innerText = `Erro: ${msg}\nLocal: ${url}\nLinha: ${lineNo}:${columnNo}\nStack: ${error ? error.stack : 'N/A'}`;
+            }
+            return false;
+        };
+    </script>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
@@ -112,7 +135,18 @@
         
         let supabaseClient;
         try {
-            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+            if (window.supabase) {
+                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+            } else {
+                console.error("Biblioteca Supabase não carregada!");
+                document.getElementById('root').innerHTML = `
+                    <div class="flex flex-col items-center justify-center min-h-screen p-4 text-center">
+                        <p class="text-red-600 font-bold mb-2">Erro de Carregamento</p>
+                        <p class="text-gray-600">Não foi possível conectar aos nossos servidores. Por favor, recarregue a página.</p>
+                        <button onclick="window.location.reload()" class="mt-4 px-4 py-2 bg-brand-navy text-white rounded-lg">Recarregar</button>
+                    </div>
+                `;
+            }
         } catch (e) {
             console.error("Erro ao inicializar Supabase:", e);
         }
@@ -235,7 +269,7 @@
                 const email = e.target.email.value;
 
                 const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.origin + window.location.pathname.replace('Acelo.html', 'dashboard.html'),
+                    redirectTo: window.location.origin + window.location.pathname.replace('index.html', 'dashboard.html'),
                 });
                 
                 if (error) {

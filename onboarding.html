@@ -101,9 +101,9 @@
         }
     </style>
 
-    <!-- React and ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- React and ReactDOM (Production) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -115,7 +115,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-brand-canvas text-brand-slate dark:bg-brand-dark dark:text-gray-100 min-h-screen flex flex-col">
-    <div id="root" class="flex-grow flex flex-col"></div>
+    <div id="root" class="flex-grow flex flex-col">
+        <div class="flex flex-col items-center justify-center min-h-screen">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-navy"></div>
+            <p class="mt-4 font-medium text-brand-navy">Configurando seu perfil...</p>
+        </div>
+    </div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
@@ -124,7 +129,18 @@
         
         let supabaseClient;
         try {
-            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+            if (window.supabase) {
+                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+            } else {
+                console.error("Supabase não carregado!");
+                document.getElementById('root').innerHTML = `
+                    <div class="flex flex-col items-center justify-center min-h-screen p-6 text-center">
+                        <p class="text-red-500 font-bold mb-2">Erro de Inicialização</p>
+                        <p class="text-gray-600">Falha ao carregar módulos de segurança. Verifique sua internet.</p>
+                        <button onclick="window.location.reload()" class="mt-4 px-4 py-2 bg-brand-navy text-white rounded-lg">Tentar de novo</button>
+                    </div>
+                `;
+            }
         } catch (e) {
             console.error("Erro ao inicializar Supabase:", e);
         }
@@ -178,13 +194,13 @@
                         const { data: { session }, error } = await supabaseClient.auth.getSession();
                         if (error) throw error;
                         if (!session) {
-                            window.location.href = 'Acelo.html';
+                            window.location.href = 'index.html';
                             return;
                         }
                         setUserId(session.user.id);
                     } catch (err) {
                         console.error("Auth check failed:", err);
-                        window.location.href = 'Acelo.html';
+                        window.location.href = 'index.html';
                     } finally {
                         setLoading(false);
                     }

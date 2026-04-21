@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Debug Acelo</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.5; }
+        .success { color: green; }
+        .error { color: red; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Página de Diagnóstico Acelo</h1>
+    <div id="results">Verificando recursos...</div>
+
+    <script>
+        const results = document.getElementById('results');
+        const log = (msg, type = '') => {
+            const p = document.createElement('p');
+            p.textContent = msg;
+            if (type) p.className = type;
+            results.appendChild(p);
+        };
+
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            log(`ERRO GLOBAL: ${msg} na linha ${lineNo}:${columnNo}`, 'error');
+            return false;
+        };
+
+        const checkResource = async (name, url) => {
+            try {
+                const res = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+                log(`✓ ${name} acessível`, 'success');
+            } catch (e) {
+                log(`✗ ${name} falhou: ${e.message}`, 'error');
+            }
+        };
+
+        async function runDiagnostics() {
+            results.innerHTML = '';
+            log('Iniciando diagnósticos...');
+
+            await checkResource('React', 'https://unpkg.com/react@18/umd/react.development.js');
+            await checkResource('ReactDOM', 'https://unpkg.com/react-dom@18/umd/react-dom.development.js');
+            await checkResource('Babel', 'https://unpkg.com/@babel/standalone/babel.min.js');
+            await checkResource('Lucide', 'https://unpkg.com/lucide@latest');
+            await checkResource('Supabase', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+
+            log('--- Verificando Variáveis Globais ---');
+            log(`React: ${typeof React}`);
+            log(`ReactDOM: ${typeof ReactDOM}`);
+            log(`Babel: ${typeof Babel}`);
+            log(`lucide: ${typeof lucide}`);
+            log(`supabase: ${typeof supabase}`);
+
+            if (typeof supabase !== 'undefined') {
+                try {
+                    const testClient = supabase.createClient('https://example.supabase.co', 'test-key');
+                    log('✓ Cliente Supabase pode ser criado', 'success');
+                } catch (e) {
+                    log(`✗ Falha ao criar cliente Supabase: ${e.message}`, 'error');
+                }
+            }
+        }
+
+        setTimeout(runDiagnostics, 2000);
+    </script>
+    
+    <!-- Tentar carregar os scripts reais para testar a execução -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</body>
+</html>

@@ -53,31 +53,71 @@
         .toast-exit { animation: toastSlideOut 0.3s ease-in forwards; }
     </style>
 
-    <!-- React, ReactDOM, Babel, Recharts, Lucide -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- React, ReactDOM, Babel, Recharts, Lucide (Production) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
-    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+    <script src="https://unpkg.com/recharts/dist/Recharts.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-brand-canvas text-brand-slate dark:bg-brand-dark dark:text-gray-100 h-screen overflow-hidden flex">
-    <div id="root" class="w-full h-full flex"></div>
+    <div id="root" class="w-full h-full flex">
+        <div id="loading-fallback" class="flex flex-col items-center justify-center w-full h-full bg-brand-canvas dark:bg-brand-dark">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-navy"></div>
+            <p class="mt-4 font-medium text-brand-navy dark:text-brand-royal">Carregando Dashboard...</p>
+        </div>
+    </div>
+
+    <div id="error-display" class="hidden fixed inset-0 z-[9999] bg-red-50 p-10 overflow-auto font-mono text-red-800">
+        <h1 class="text-2xl font-bold mb-4">Erro Crítico de Execução</h1>
+        <div id="error-content" class="bg-white p-4 rounded border border-red-200"></div>
+        <button onclick="window.location.reload()" class="mt-4 px-6 py-2 bg-red-600 text-white rounded">Tentar Recarregar</button>
+    </div>
+
+    <script>
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            const display = document.getElementById('error-display');
+            const content = document.getElementById('error-content');
+            if (display && content) {
+                display.classList.remove('hidden');
+                content.innerText = `Erro: ${msg}\nLocal: ${url}\nLinha: ${lineNo}:${columnNo}\nStack: ${error ? error.stack : 'N/A'}`;
+            }
+            return false;
+        };
+    </script>
 
     <script type="text/babel">
         const { useState, useEffect, useRef, useCallback, useMemo } = React;
         const { 
             LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, 
             Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie 
-        } = Recharts;
+        } = window.Recharts || {};
+        
+        if (!window.Recharts) {
+            console.error("Recharts não foi carregado corretamente!");
+        }
         const supabaseUrl = 'https://tslvpvamvwexzyiyoobx.supabase.co';
         const supabaseKey = 'sb_publishable_NoErqD-ZmgszMs1HmZPYqA_ucJ-H78l';
         
         let supabaseClient;
         try {
-            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+            if (window.supabase) {
+                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+            } else {
+                console.error("Erro: Supabase não carregado.");
+                document.getElementById('root').innerHTML = `
+                    <div class="flex flex-col items-center justify-center w-full h-full bg-white dark:bg-brand-dark p-6 text-center">
+                        <div class="bg-red-50 dark:bg-red-900/20 p-6 rounded-2xl max-w-md">
+                            <p class="text-red-600 dark:text-red-400 font-bold text-lg mb-2">Falha na Conexão</p>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">Não conseguimos carregar os componentes de segurança. Verifique sua conexão.</p>
+                            <button onclick="window.location.reload()" class="px-6 py-2 bg-brand-navy text-white rounded-xl hover:bg-brand-navy/90 transition-all">Tentar Novamente</button>
+                        </div>
+                    </div>
+                `;
+            }
         } catch (e) {
             console.error("Erro ao inicializar Supabase:", e);
         }
@@ -1271,8 +1311,12 @@
             const [userId, setUserId] = useState(null);
 
             const [users, setUsers] = useState(() => {
-                const saved = localStorage.getItem('@Acelo:users');
-                if (saved) return JSON.parse(saved);
+                try {
+                    const saved = localStorage.getItem('@Acelo:users');
+                    if (saved) return JSON.parse(saved);
+                } catch (e) {
+                    console.error("Erro ao carregar usuários do cache:", e);
+                }
                 return [
                     { id: 1, email: 'novo.cliente@gmail.com', date: 'Hoje, 10:30', status: 'pendente' },
                     { id: 2, email: 'empresa.x@hotmail.com', date: 'Ontem, 15:45', status: 'pendente' },
@@ -1291,14 +1335,14 @@
                         const { data: { session }, error } = await supabaseClient.auth.getSession();
                         if (error) throw error;
                         if (!session) {
-                            window.location.href = 'Acelo.html';
+                            window.location.href = 'index.html';
                             return;
                         }
                         setUserId(session.user.id);
                     } catch (err) {
                         console.error("Auth check failed:", err);
                         // Optional: redirect to login if session is invalid
-                        window.location.href = 'Acelo.html';
+                        window.location.href = 'index.html';
                     } finally {
                         setLoading(false);
                     }
@@ -1400,7 +1444,7 @@
                             </button>
                             <button onClick={async () => {
                                 await supabaseClient.auth.signOut();
-                                window.location.href = 'Acelo.html';
+                                window.location.href = 'index.html';
                             }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
                                 <Icon name="log-out" className="w-5 h-5" /> Sair do Painel
                             </button>

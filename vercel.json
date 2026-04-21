@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/Lunnar.html"
+      "destination": "/Acelo.html"
     }
   ]
 }
